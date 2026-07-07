@@ -39,10 +39,15 @@ async def receive_dahua_event(device_code: str, request: Request) -> dict:
     """
     Dahua qurilmasidan kelgan bitta hodisani qabul qiladi.
 
-    202 Accepted qaytaradi: "qabul qilindi" degani, hali to'liq qayta
-    ishlanmagan bo'lishi mumkin (keyingi bosqichda queue orqali).
-    Qurilmaga TEZ javob qaytarish muhim — ba'zi Dahua qurilmalari
-    javob kechiksa keyingi hodisani yubormay kutib turadi.
+    202 Accepted qaytaradi: "qabul qilindi" degani — event navbatga
+    qo'yiladi, backend'ga yuborilishi kutilmaydi. Qurilmaga TEZ javob
+    qaytarish muhim — ba'zi Dahua qurilmalari javob kechiksa keyingi
+    hodisani yubormay kutib turadi.
+
+    app.state.event_service — app.py'da ilova ishga tushganda
+    yaratiladi va shu yerga FastAPI orqali uzatiladi (dependency
+    sifatida emas, oddiy app.state orqali, chunki bitta global
+    instance yetarli).
     """
     # 1. Qurilma ma'lumotini topish
     try:
@@ -98,8 +103,7 @@ async def receive_dahua_event(device_code: str, request: Request) -> dict:
 
     logger.info("device=%s: event qabul qilindi (%s)", device_code, event.event_type.value)
 
-    # TODO(keyingi qadam): event'ni services/event_service.py'ga uzatish,
-    # u yerdan queue/event_client.py orqali backend'ga yuborish.
-    # Hozircha faqat qabul qilib, log qilinadi.
+    event_service = request.app.state.event_service
+    event_service.handle_event(event)
 
     return {"status": "accepted", "event_type": event.event_type.value}

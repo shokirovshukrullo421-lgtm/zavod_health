@@ -1,0 +1,53 @@
+version: 1
+disable_existing_loggers: false
+
+formatters:
+  standard:
+    format: "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: DEBUG
+    formatter: standard
+    stream: ext://sys.stdout
+
+  app_file:
+    class: logging.handlers.RotatingFileHandler
+    level: INFO
+    formatter: standard
+    filename: logs/app.log
+    maxBytes: 5242880    # 5 MB
+    backupCount: 5
+    encoding: utf-8
+
+  error_file:
+    class: logging.handlers.RotatingFileHandler
+    level: ERROR
+    formatter: standard
+    filename: logs/error.log
+    maxBytes: 5242880
+    backupCount: 5
+    encoding: utf-8
+
+  callback_file:
+    class: logging.handlers.RotatingFileHandler
+    level: DEBUG
+    formatter: standard
+    filename: logs/callback.log
+    maxBytes: 5242880
+    backupCount: 5
+    encoding: utf-8
+
+loggers:
+  # Webhook orqali kelgan har bir so'rov (muvaffaqiyatli/xato) alohida
+  # faylga (callback.log) yoziladi — bu qurilmalar bilan bog'liq
+  # muammolarni tez topish uchun umumiy app.log'dan ajratilgan.
+  api.routes:
+    level: DEBUG
+    handlers: [callback_file]
+    propagate: true
+
+root:
+  level: INFO
+  handlers: [console, app_file, error_file]
